@@ -141,3 +141,14 @@ export async function deleteMeal(id: string) {
     args: [id],
   });
 }
+
+export async function getDatesWithMealNotes() {
+  const result = await db.execute(`
+    SELECT DISTINCT meal_date
+    FROM meals
+    WHERE TRIM(effects) != ''
+    ORDER BY meal_date
+  `);
+
+  return result.rows.map((row) => asString(row.meal_date));
+}

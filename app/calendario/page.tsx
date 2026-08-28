@@ -1,4 +1,4 @@
-import { getMealsBetween } from "@/lib/meals";
+import { getDatesWithMealNotes, getMealsBetween } from "@/lib/meals";
 import { getRecipes } from "@/lib/recipes";
 import {
   dateKey,
@@ -14,10 +14,10 @@ export const dynamic = "force-dynamic";
 export default async function CalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string; mealDeleted?: string }>;
+  searchParams: Promise<{ date?: string; mealDeleted?: string; notes?: string }>;
 }) {
   const today = new Date();
-  const { date: requestedDate, mealDeleted } = await searchParams;
+  const { date: requestedDate, mealDeleted, notes } = await searchParams;
   const anchorDate = isDateKey(requestedDate)
     ? new Date(`${requestedDate}T00:00:00`)
     : today;
@@ -30,9 +30,10 @@ export default async function CalendarPage({
       ? requestedDate
       : undefined;
   const selectedDay = validRequestedDate ?? dateKey(anchorDate);
-  const [recipes, meals] = await Promise.all([
+  const [recipes, meals, notedDates] = await Promise.all([
     getRecipes(),
     getMealsBetween(dateKey(monday), dateKey(sunday), dateKey(today)),
+    getDatesWithMealNotes(),
   ]);
 
   return (
@@ -46,6 +47,8 @@ export default async function CalendarPage({
         initialSelectedDay={selectedDay}
         recipes={recipes}
         meals={meals}
+        notedDates={notedDates}
+        initialNotesFilter={notes === "1"}
       />
     </>
   );

@@ -34,61 +34,107 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
-function StatsSection({
-  label,
-  mostSelected,
-  bestRated,
+function RecipeList({
+  items,
+  emptyMessage = "Todavia no hay datos.",
 }: {
-  label: string;
-  mostSelected: Awaited<ReturnType<typeof getMostSelectedRecipes>>;
+  items: Array<
+    | { key: string; title: string; trailing: React.ReactNode }
+  >;
+  emptyMessage?: string;
+}) {
+  if (items.length === 0) {
+    return <p className="text-sm text-zinc-500">{emptyMessage}</p>;
+  }
+
+  return (
+    <ol className="flex flex-col gap-3">
+      {items.map((item) => (
+        <li key={item.key} className="flex items-center justify-between gap-4 text-sm">
+          <span className="min-w-0 font-medium text-zinc-800 dark:text-zinc-200">
+            {item.title}
+          </span>
+          {item.trailing}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function StatisticsSection({
+  bestRated,
+  weekMostSelected,
+  monthMostSelected,
+}: {
   bestRated: Awaited<ReturnType<typeof getBestRatedRecipes>>;
+  weekMostSelected: Awaited<ReturnType<typeof getMostSelectedRecipes>>;
+  monthMostSelected: Awaited<ReturnType<typeof getMostSelectedRecipes>>;
 }) {
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-6">
       <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
-        Estadisticas · {label}
+        Estadisticas
       </h2>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">
-            Mas populares
-          </h3>
-          {mostSelected.length > 0 ? (
-            <ol className="mt-4 flex flex-col gap-3">
-              {mostSelected.map((recipe) => (
-                <li key={recipe.recipeId} className="flex items-center justify-between gap-4 text-sm">
-                  <span className="font-medium text-zinc-800 dark:text-zinc-200">
-                    {recipe.title}
-                  </span>
-                  <span className="shrink-0 text-zinc-500">
-                    {recipe.selections} {recipe.selections === 1 ? "vez" : "veces"}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p className="mt-4 text-sm text-zinc-500">Todavia no hay datos.</p>
-          )}
-        </div>
 
+      <div className="flex flex-col gap-3">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">
+          Mejor puntuadas
+        </h3>
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">
-            Mejor puntuadas
-          </h3>
-          {bestRated.length > 0 ? (
-            <ol className="mt-4 flex flex-col gap-3">
-              {bestRated.map((recipe) => (
-                <li key={recipe.id} className="flex items-center justify-between gap-4 text-sm">
-                  <span className="min-w-0 font-medium text-zinc-800 dark:text-zinc-200">
-                    {recipe.title}
-                  </span>
-                  <Stars rating={recipe.rating} />
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p className="mt-4 text-sm text-zinc-500">Todavia no hay datos.</p>
-          )}
+          <RecipeList
+            items={bestRated.map((recipe) => ({
+              key: recipe.id,
+              title: recipe.title,
+              trailing: <Stars rating={recipe.rating} />,
+            }))}
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">
+          Mas populares
+        </h3>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+            <h4 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">
+              Ultima semana
+            </h4>
+            <div className="mt-4">
+              <RecipeList
+                items={weekMostSelected.map((recipe) => ({
+                  key: recipe.recipeId,
+                  title: recipe.title,
+                  trailing: (
+                    <span className="shrink-0 text-zinc-500">
+                      {recipe.selections}{" "}
+                      {recipe.selections === 1 ? "vez" : "veces"}
+                    </span>
+                  ),
+                }))}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+            <h4 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">
+              Ultimo mes
+            </h4>
+            <div className="mt-4">
+              <RecipeList
+                items={monthMostSelected.map((recipe) => ({
+                  key: recipe.recipeId,
+                  title: recipe.title,
+                  trailing: (
+                    <span className="shrink-0 text-zinc-500">
+                      {recipe.selections}{" "}
+                      {recipe.selections === 1 ? "vez" : "veces"}
+                    </span>
+                  ),
+                }))}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -152,15 +198,10 @@ export default async function Home() {
           )}
         </section>
 
-        <StatsSection
-          label="ultima semana"
-          mostSelected={weekMostSelected}
+        <StatisticsSection
           bestRated={bestRatedRecipes}
-        />
-        <StatsSection
-          label="ultimo mes"
-          mostSelected={monthMostSelected}
-          bestRated={bestRatedRecipes}
+          weekMostSelected={weekMostSelected}
+          monthMostSelected={monthMostSelected}
         />
       </div>
     </main>
