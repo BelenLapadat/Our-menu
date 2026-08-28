@@ -1,0 +1,11 @@
+export default function Footer() {
+  return (
+    <footer className="shrink-0 border-t border-zinc-200 px-6 py-5 text-center text-sm text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+      <span>&copy; 2026 Nuestro Menusito</span>
+      <span className="mx-2" aria-hidden="true">
+        ·
+      </span>
+      <span>Made with love by Belen Lapadat</span>
+    </footer>
+  );
+}
