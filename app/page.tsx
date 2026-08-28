@@ -1,25 +1,13 @@
 import Link from "next/link";
 import { CalendarDays, Star } from "lucide-react";
+import { dateDaysAgo, dateKey } from "@/lib/dates";
 import {
-  getBestRatedMeals,
   getMealsBetween,
   getMostSelectedRecipes,
 } from "@/lib/meals";
+import { getBestRatedRecipes } from "@/lib/recipes";
 
 export const dynamic = "force-dynamic";
-
-function dateKey(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function dateDaysAgo(days: number) {
-  const date = new Date();
-  date.setDate(date.getDate() - days);
-  return dateKey(date);
-}
 
 const todayFormatter = new Intl.DateTimeFormat("es", {
   weekday: "long",
@@ -52,8 +40,8 @@ function StatsSection({
   bestRated,
 }: {
   label: string;
-  mostSelected: ReturnType<typeof getMostSelectedRecipes>;
-  bestRated: ReturnType<typeof getBestRatedMeals>;
+  mostSelected: Awaited<ReturnType<typeof getMostSelectedRecipes>>;
+  bestRated: Awaited<ReturnType<typeof getBestRatedRecipes>>;
 }) {
   return (
     <section className="flex flex-col gap-4">
@@ -89,12 +77,12 @@ function StatsSection({
           </h3>
           {bestRated.length > 0 ? (
             <ol className="mt-4 flex flex-col gap-3">
-              {bestRated.map((meal) => (
-                <li key={meal.id} className="flex items-center justify-between gap-4 text-sm">
+              {bestRated.map((recipe) => (
+                <li key={recipe.id} className="flex items-center justify-between gap-4 text-sm">
                   <span className="min-w-0 font-medium text-zinc-800 dark:text-zinc-200">
-                    {meal.recipeTitles.join(" + ")}
+                    {recipe.title}
                   </span>
-                  <Stars rating={meal.rating} />
+                  <Stars rating={recipe.rating} />
                 </li>
               ))}
             </ol>
@@ -107,11 +95,15 @@ function StatsSection({
   );
 }
 
-export default function Home() {
+export default async function Home() {
   const today = dateKey(new Date());
-  const todayMeals = getMealsBetween(today, today, today);
-  const weekStart = dateDaysAgo(6);
-  const monthStart = dateDaysAgo(29);
+  const [todayMeals, bestRatedRecipes, weekMostSelected, monthMostSelected] =
+    await Promise.all([
+      getMealsBetween(today, today, today),
+      getBestRatedRecipes(),
+      getMostSelectedRecipes(dateDaysAgo(6), today),
+      getMostSelectedRecipes(dateDaysAgo(29), today),
+    ]);
 
   return (
     <main className="flex-1 bg-zinc-50 px-6 py-16 dark:bg-black sm:px-16">
@@ -162,13 +154,13 @@ export default function Home() {
 
         <StatsSection
           label="ultima semana"
-          mostSelected={getMostSelectedRecipes(weekStart, today)}
-          bestRated={getBestRatedMeals(weekStart, today)}
+          mostSelected={weekMostSelected}
+          bestRated={bestRatedRecipes}
         />
         <StatsSection
           label="ultimo mes"
-          mostSelected={getMostSelectedRecipes(monthStart, today)}
-          bestRated={getBestRatedMeals(monthStart, today)}
+          mostSelected={monthMostSelected}
+          bestRated={bestRatedRecipes}
         />
       </div>
     </main>

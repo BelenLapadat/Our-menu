@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Pencil, Plus, Star, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import type { Meal } from "@/lib/meals";
 import type { Recipe } from "@/lib/recipes";
 
@@ -62,25 +62,6 @@ export default function MealList({
                 })}
               </ul>
               <div className="flex shrink-0 flex-col items-end gap-1">
-                {meal.rating > 0 && (
-                  <div
-                    className="flex"
-                    aria-label={`Valoracion: ${meal.rating} de 5`}
-                  >
-                    {Array.from({ length: 5 }, (_, index) => (
-                      <Star
-                        key={index}
-                        aria-hidden="true"
-                        size={14}
-                        className={
-                          index < meal.rating
-                            ? "fill-amber-400 text-amber-400"
-                            : "text-zinc-300 dark:text-zinc-700"
-                        }
-                      />
-                    ))}
-                  </div>
-                )}
                 {meal.effects && (
                   <p className="max-w-40 text-right text-xs text-zinc-500">
                     {meal.effects}

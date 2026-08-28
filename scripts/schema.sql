@@ -1,0 +1,24 @@
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS recipes (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  notes TEXT NOT NULL DEFAULT '',
+  deleted_at TEXT,
+  rating INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS meals (
+  id TEXT PRIMARY KEY,
+  meal_date TEXT NOT NULL,
+  effects TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS meal_recipes (
+  meal_id TEXT NOT NULL REFERENCES meals(id) ON DELETE CASCADE,
+  recipe_id TEXT NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
+  PRIMARY KEY (meal_id, recipe_id)
+);

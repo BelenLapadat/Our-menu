@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Search, Star, X } from "lucide-react";
+import { dateFromKey } from "@/lib/dates";
 import type { Meal } from "@/lib/meals";
 import type { Recipe } from "@/lib/recipes";
+import { matchesSearch } from "@/lib/search";
 import { addMeal, updateMeal } from "./actions";
 
 const dayFormatter = new Intl.DateTimeFormat("es", {
@@ -12,16 +14,34 @@ const dayFormatter = new Intl.DateTimeFormat("es", {
   month: "long",
 });
 
-function normalize(value: string) {
-  return value
-    .toLocaleLowerCase("es")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
-
-function dateFromKey(key: string) {
-  const [year, month, day] = key.split("-").map(Number);
-  return new Date(year, month - 1, day);
+function RecipeStars({
+  rating,
+  inverted = false,
+}: {
+  rating: number;
+  inverted?: boolean;
+}) {
+  return (
+    <span
+      className="flex shrink-0"
+      aria-label={`${rating} de 5 estrellas`}
+    >
+      {Array.from({ length: 5 }, (_, index) => (
+        <Star
+          key={index}
+          aria-hidden="true"
+          size={14}
+          className={
+            index < rating
+              ? "fill-amber-400 text-amber-400"
+              : inverted
+                ? "text-zinc-400"
+                : "text-zinc-300 dark:text-zinc-700"
+          }
+        />
+      ))}
+    </span>
+  );
 }
 
 export default function MealForm({
@@ -39,13 +59,11 @@ export default function MealForm({
   const [selectedRecipeIds, setSelectedRecipeIds] = useState<string[]>(
     meal?.recipeIds ?? [],
   );
-  const [rating, setRating] = useState(meal?.rating ?? 0);
   const [effects, setEffects] = useState(meal?.effects ?? "");
   const [isRecipeListOpen, setIsRecipeListOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
-  const normalizedSearchTerm = normalize(searchTerm.trim());
   const matchingRecipes = recipes.filter((recipe) =>
-    normalize(recipe.title).includes(normalizedSearchTerm),
+    matchesSearch(recipe.title, searchTerm.trim()),
   );
 
   useEffect(() => {
@@ -123,7 +141,6 @@ export default function MealForm({
             name="recipeIds"
             value={JSON.stringify(selectedRecipeIds)}
           />
-          <input type="hidden" name="rating" value={rating} />
           <div>
             <label
               htmlFor="recipe-search"
@@ -159,10 +176,16 @@ export default function MealForm({
                         key={recipe.id}
                         type="button"
                         onClick={() => selectRecipe(recipe)}
-                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors ${isSelected ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950" : "text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"}`}
+                        className={`flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors ${isSelected ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950" : "text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"}`}
                       >
-                        {recipe.title}
-                        {isSelected && <span aria-hidden="true">✓</span>}
+                        <span className="min-w-0 truncate">{recipe.title}</span>
+                        <span className="flex shrink-0 items-center gap-2">
+                          <RecipeStars
+                            rating={recipe.rating}
+                            inverted={isSelected}
+                          />
+                          {isSelected && <span aria-hidden="true">✓</span>}
+                        </span>
                       </button>
                     );
                   })}
@@ -208,42 +231,6 @@ export default function MealForm({
                 })}
               </div>
             )}
-          </div>
-
-          <div>
-            <p className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
-              Valoracion (opcional)
-            </p>
-            <div
-              className="mt-2 flex gap-1"
-              role="radiogroup"
-              aria-label="Valoracion de la comida"
-            >
-              {Array.from({ length: 5 }, (_, index) => {
-                const value = index + 1;
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    role="radio"
-                    aria-checked={rating === value}
-                    aria-label={`${value} de 5 estrellas`}
-                    onClick={() => setRating(value)}
-                    className="rounded-md p-1 text-amber-400 transition-colors hover:bg-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 dark:hover:bg-amber-950"
-                  >
-                    <Star
-                      aria-hidden="true"
-                      size={24}
-                      className={
-                        value <= rating
-                          ? "fill-current"
-                          : "text-zinc-300 dark:text-zinc-700"
-                      }
-                    />
-                  </button>
-                );
-              })}
-            </div>
           </div>
 
           <label className="flex flex-col gap-2 text-sm font-medium text-zinc-950 dark:text-zinc-50">

@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nuestro Menusito
 
-## Getting Started
+A personal meal planner built with Next.js, SQLite, and Turso.
 
-First, run the development server:
+## Local development
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Create the local database:
+
+```bash
+npm run db:setup
+```
+
+This creates `data/menu.db` and seeds sample recipes when the database is empty.
+
+3. Start the dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploy to Vercel + Turso
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Create a Turso database
 
-## Learn More
+Install the [Turso CLI](https://docs.turso.tech/cli/introduction), then:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+turso auth login
+turso db create our-menu
+turso db show our-menu --url
+turso db tokens create our-menu
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Save the database URL and auth token.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 2. Apply the schema
 
-## Deploy on Vercel
+Point the setup script at Turso (replace the URL and token):
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+TURSO_DATABASE_URL="libsql://..." TURSO_AUTH_TOKEN="..." npm run db:setup
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This creates the tables and seeds sample recipes if the database is empty.
+
+### 3. Deploy to Vercel
+
+Push the repo to GitHub, import it in [Vercel](https://vercel.com/new), and add these environment variables:
+
+| Variable | Value |
+|---|---|
+| `TURSO_DATABASE_URL` | Your Turso database URL (`libsql://...`) |
+| `TURSO_AUTH_TOKEN` | Your Turso auth token |
+
+Deploy. No extra build configuration is required.
+
+### Optional: use Turso locally
+
+Copy `.env.example` to `.env.local` and fill in your Turso credentials. The app will use Turso instead of the local file.
+
+```bash
+cp .env.example .env.local
+npm run db:setup
+npm run dev
+```
+
+## Scripts
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start the development server |
+| `npm run build` | Production build |
+| `npm run db:setup` | Create tables and seed sample data |

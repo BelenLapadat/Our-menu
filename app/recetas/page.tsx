@@ -10,8 +10,8 @@ export default async function RecetasPage({
 }: {
   searchParams: Promise<{ deleted?: string; recipe?: string }>;
 }) {
-  const recipes = getRecipes();
   const { deleted, recipe: selectedRecipeId } = await searchParams;
+  const recipes = await getRecipes();
 
   return (
     <main className="flex-1 bg-zinc-50 px-6 py-16 dark:bg-black sm:px-16">

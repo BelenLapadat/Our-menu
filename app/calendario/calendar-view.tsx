@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { CalendarDay } from "@/lib/dates";
+import { dateFromKey, dateKey } from "@/lib/dates";
 import type { Meal } from "@/lib/meals";
 import type { Recipe } from "@/lib/recipes";
 import CreateMealModal from "./create-meal-modal";
@@ -17,20 +19,6 @@ const dayFormatter = new Intl.DateTimeFormat("es", {
   day: "numeric",
   month: "long",
 });
-
-type CalendarDay = { key: string; timestamp: number };
-
-function dateFromKey(key: string) {
-  const [year, month, day] = key.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
-
-function dateKey(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
 
 export default function CalendarView({
   days,

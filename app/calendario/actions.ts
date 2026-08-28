@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   createMeal,
@@ -8,30 +7,35 @@ import {
   updateMeal as saveMeal,
 } from "@/lib/meals";
 import { validateMealInput } from "@/lib/meal-validation";
+import { revalidateAfterMealChange } from "@/lib/revalidate";
 import { getRecipes } from "@/lib/recipes";
 
 export async function addMeal(formData: FormData) {
-  const availableRecipeIds = new Set(getRecipes().map((recipe) => recipe.id));
-  const { date, recipeIds, rating, effects } = validateMealInput(
+  const availableRecipeIds = new Set(
+    (await getRecipes()).map((recipe) => recipe.id),
+  );
+  const { date, recipeIds, effects } = validateMealInput(
     formData,
     availableRecipeIds,
   );
 
-  createMeal(date, recipeIds, rating, effects);
-  revalidatePath("/calendario");
+  await createMeal(date, recipeIds, effects);
+  revalidateAfterMealChange();
   redirect(`/calendario?date=${encodeURIComponent(date)}`);
 }
 
 export async function updateMeal(formData: FormData) {
-  const availableRecipeIds = new Set(getRecipes().map((recipe) => recipe.id));
-  const { id, date, recipeIds, rating, effects } = validateMealInput(
+  const availableRecipeIds = new Set(
+    (await getRecipes()).map((recipe) => recipe.id),
+  );
+  const { id, date, recipeIds, effects } = validateMealInput(
     formData,
     availableRecipeIds,
     true,
   );
 
-  saveMeal(id!, recipeIds, rating, effects);
-  revalidatePath("/calendario");
+  await saveMeal(id!, recipeIds, effects);
+  revalidateAfterMealChange();
   redirect(`/calendario?date=${encodeURIComponent(date)}`);
 }
 
@@ -43,7 +47,7 @@ export async function deleteMeal(formData: FormData) {
     throw new Error("La comida no es valida.");
   }
 
-  removeMeal(id);
-  revalidatePath("/calendario");
+  await removeMeal(id);
+  revalidateAfterMealChange();
   redirect(`/calendario?date=${encodeURIComponent(date)}&mealDeleted=1`);
 }

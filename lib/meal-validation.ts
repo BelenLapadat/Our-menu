@@ -2,7 +2,6 @@ export type ValidatedMealInput = {
   id?: string;
   date: string;
   recipeIds: string[];
-  rating: number;
   effects: string;
 };
 
@@ -13,7 +12,6 @@ export function validateMealInput(
 ): ValidatedMealInput {
   const id = String(formData.get("id") ?? "").trim();
   const date = String(formData.get("date") ?? "").trim();
-  const rating = Number(formData.get("rating"));
   const effects = String(formData.get("effects") ?? "").trim();
   const rawRecipeIds = String(formData.get("recipeIds") ?? "[]");
 
@@ -26,10 +24,6 @@ export function validateMealInput(
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Array.isArray(recipeIds)) {
     throw new Error("Los datos de la comida no son validos.");
-  }
-
-  if (!Number.isInteger(rating) || rating < 0 || rating > 5) {
-    throw new Error("La valoracion no es valida.");
   }
 
   const validRecipeIds = recipeIds.filter(
@@ -45,5 +39,5 @@ export function validateMealInput(
     throw new Error("La comida no es valida.");
   }
 
-  return { id: id || undefined, date, recipeIds: validRecipeIds, rating, effects };
+  return { id: id || undefined, date, recipeIds: validRecipeIds, effects };
 }

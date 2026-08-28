@@ -3,9 +3,53 @@
 import { useDeferredValue, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Pencil, Search, Trash2 } from "lucide-react";
+import { Pencil, Search, Star, Trash2 } from "lucide-react";
 import type { Recipe } from "@/lib/recipes";
-import { deleteRecipe } from "./actions";
+import { matchesSearch } from "@/lib/search";
+import { deleteRecipe, rateRecipe } from "./actions";
+
+function RecipeRating({
+  recipeId,
+  rating,
+}: {
+  recipeId: string;
+  rating: number;
+}) {
+  return (
+    <div
+      className="flex shrink-0 gap-0.5"
+      role="radiogroup"
+      aria-label="Valoracion de la receta"
+    >
+      {Array.from({ length: 5 }, (_, index) => {
+        const value = index + 1;
+        return (
+          <form key={value} action={rateRecipe}>
+            <input type="hidden" name="id" value={recipeId} />
+            <input type="hidden" name="rating" value={value} />
+            <button
+              type="submit"
+              role="radio"
+              aria-checked={rating === value}
+              aria-label={`${value} de 5 estrellas`}
+              className="rounded-sm p-0.5 text-amber-400 transition-colors hover:bg-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 dark:hover:bg-amber-950"
+            >
+              <Star
+                aria-hidden="true"
+                size={16}
+                className={
+                  value <= rating
+                    ? "fill-current"
+                    : "text-zinc-300 dark:text-zinc-700"
+                }
+              />
+            </button>
+          </form>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function RecipeList({
   recipes,
@@ -28,19 +72,12 @@ export default function RecipeList({
   const [searchTerm, setSearchTerm] = useState("");
   const deferredSearchTerm = useDeferredValue(searchTerm);
 
-  const normalizedSearchTerm = deferredSearchTerm
-    .trim()
-    .toLocaleLowerCase("es")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-  const filteredRecipes = recipes.filter((recipe) => {
-    const searchableText = `${recipe.title} ${recipe.description}`
-      .toLocaleLowerCase("es")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-
-    return searchableText.includes(normalizedSearchTerm);
-  });
+  const filteredRecipes = recipes.filter((recipe) =>
+    matchesSearch(
+      `${recipe.title} ${recipe.description}`,
+      deferredSearchTerm.trim(),
+    ),
+  );
 
   return (
     <div className="flex flex-col gap-4">
@@ -69,29 +106,32 @@ export default function RecipeList({
               key={recipe.id}
               className="px-5 py-4 first:rounded-t-2xl last:rounded-b-2xl"
             >
-              <button
-                type="button"
-                aria-expanded={isOpen}
-                aria-controls={`${recipe.id}-details`}
-                aria-label={`${isOpen ? "Ocultar" : "Mostrar"} descripcion de ${recipe.title}`}
-                onClick={() =>
-                  setOpenRecipeOverride({
-                    queryId: requestedRecipeId,
-                    recipeId: isOpen ? null : recipe.id,
-                  })
-                }
-                className="flex w-full items-center justify-start gap-3 rounded-lg px-2 py-1 text-left text-zinc-600 transition-colors hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:focus-visible:outline-zinc-50"
-              >
-                <span
-                  aria-hidden="true"
-                  className={`text-lg leading-none transition-transform ${isOpen ? "rotate-90" : "rotate-0"}`}
+              <div className="flex w-full items-center gap-3 rounded-lg px-2 py-1 text-zinc-600 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                <button
+                  type="button"
+                  aria-expanded={isOpen}
+                  aria-controls={`${recipe.id}-details`}
+                  aria-label={`${isOpen ? "Ocultar" : "Mostrar"} descripcion de ${recipe.title}`}
+                  onClick={() =>
+                    setOpenRecipeOverride({
+                      queryId: requestedRecipeId,
+                      recipeId: isOpen ? null : recipe.id,
+                    })
+                  }
+                  className="flex min-w-0 flex-1 items-center justify-start gap-3 rounded-lg py-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-950 dark:focus-visible:outline-zinc-50"
                 >
-                  &gt;
-                </span>
-                <h2 className="text-lg font-medium text-zinc-950 dark:text-zinc-50">
-                  {recipe.title}
-                </h2>
-              </button>
+                  <span
+                    aria-hidden="true"
+                    className={`text-lg leading-none transition-transform ${isOpen ? "rotate-90" : "rotate-0"}`}
+                  >
+                    &gt;
+                  </span>
+                  <h2 className="text-lg font-medium text-zinc-950 dark:text-zinc-50">
+                    {recipe.title}
+                  </h2>
+                </button>
+                <RecipeRating recipeId={recipe.id} rating={recipe.rating} />
+              </div>
 
               {isOpen && (
                 <div

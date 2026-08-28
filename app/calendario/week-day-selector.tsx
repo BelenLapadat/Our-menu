@@ -1,10 +1,10 @@
 "use client";
 
 import type { Dispatch, SetStateAction } from "react";
+import type { CalendarDay } from "@/lib/dates";
+import { dateFromKey } from "@/lib/dates";
 
 const shortDayFormatter = new Intl.DateTimeFormat("es", { weekday: "short" });
-
-type CalendarDay = { key: string; timestamp: number };
 
 type WeekDaySelectorProps = {
   days: CalendarDay[];
@@ -12,11 +12,6 @@ type WeekDaySelectorProps = {
   selectedDay: string;
   setSelectedDay: Dispatch<SetStateAction<string>>;
 };
-
-function dateFromKey(key: string) {
-  const [year, month, day] = key.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
 
 export default function WeekDaySelector({
   days,

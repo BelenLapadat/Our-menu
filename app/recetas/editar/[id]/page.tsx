@@ -11,7 +11,7 @@ export default async function EditRecipePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const recipe = getRecipe(id);
+  const recipe = await getRecipe(id);
 
   if (!recipe) {
     notFound();
@@ -37,6 +37,7 @@ export default async function EditRecipePage({
           className="flex flex-col gap-6 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950"
         >
           <input type="hidden" name="id" value={recipe.id} />
+          <input type="hidden" name="rating" value={recipe.rating} />
           <label className="flex flex-col gap-2 text-sm font-medium text-zinc-950 dark:text-zinc-50">
             Titulo
             <input
