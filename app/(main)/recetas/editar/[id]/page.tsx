@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRecipe } from "@/lib/recipes";
+import { getUserHousehold } from "@/lib/session";
 import { updateRecipe } from "../../actions";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +12,12 @@ export default async function EditRecipePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const recipe = await getRecipe(id);
+  const household = await getUserHousehold();
+  if (!household) {
+    notFound();
+  }
+
+  const recipe = await getRecipe(id, household.id);
 
   if (!recipe) {
     notFound();

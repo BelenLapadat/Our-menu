@@ -16,12 +16,19 @@ async function tableExists(table: string) {
   return result.rows.length > 0;
 }
 
-async function createDefaultMenu() {
+async function createDefaultMenu(householdId?: string) {
   const menuId = randomUUID();
-  await db.execute({
-    sql: "INSERT INTO menus (id, name) VALUES (?, ?)",
-    args: [menuId, DEFAULT_MENU_NAME],
-  });
+  if (householdId) {
+    await db.execute({
+      sql: "INSERT INTO menus (id, name, household_id) VALUES (?, ?, ?)",
+      args: [menuId, DEFAULT_MENU_NAME, householdId],
+    });
+  } else {
+    await db.execute({
+      sql: "INSERT INTO menus (id, name) VALUES (?, ?)",
+      args: [menuId, DEFAULT_MENU_NAME],
+    });
+  }
   return menuId;
 }
 
@@ -139,6 +146,103 @@ export async function migrateUsers() {
       image TEXT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       last_login_at TEXT
+    )
+  `);
+}
+
+export async function migrateHouseholds() {
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS households (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS household_members (
+      household_id TEXT NOT NULL REFERENCES households(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      joined_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (household_id, user_id)
+    )
+  `);
+
+  if (await tableExists("menus") && !(await tableHasColumn("menus", "household_id"))) {
+    await db.execute(
+      "ALTER TABLE menus ADD COLUMN household_id TEXT REFERENCES households(id) ON DELETE CASCADE",
+    );
+  }
+
+  if (
+    (await tableExists("recipes")) &&
+    !(await tableHasColumn("recipes", "household_id"))
+  ) {
+    await db.execute(
+      "ALTER TABLE recipes ADD COLUMN household_id TEXT REFERENCES households(id) ON DELETE CASCADE",
+    );
+  }
+
+  const menusNeedBackfill =
+    (await tableExists("menus")) &&
+    (await tableHasColumn("menus", "household_id"));
+  const recipesNeedBackfill =
+    (await tableExists("recipes")) &&
+    (await tableHasColumn("recipes", "household_id"));
+
+  if (menusNeedBackfill || recipesNeedBackfill) {
+    const unassignedMenus = menusNeedBackfill
+      ? await db.execute(
+          "SELECT COUNT(*) AS count FROM menus WHERE household_id IS NULL",
+        )
+      : { rows: [{ count: 0 }] };
+    const unassignedRecipes = recipesNeedBackfill
+      ? await db.execute(
+          "SELECT COUNT(*) AS count FROM recipes WHERE household_id IS NULL",
+        )
+      : { rows: [{ count: 0 }] };
+
+    if (
+      asNumber(unassignedMenus.rows[0]?.count) > 0 ||
+      asNumber(unassignedRecipes.rows[0]?.count) > 0
+    ) {
+      const defaultHouseholdId = randomUUID();
+      await db.execute({
+        sql: "INSERT INTO households (id, name) VALUES (?, ?)",
+        args: [defaultHouseholdId, "Mi hogar"],
+      });
+
+      if (asNumber(unassignedMenus.rows[0]?.count) > 0) {
+        await db.execute({
+          sql: "UPDATE menus SET household_id = ? WHERE household_id IS NULL",
+          args: [defaultHouseholdId],
+        });
+      }
+
+      if (asNumber(unassignedRecipes.rows[0]?.count) > 0) {
+        await db.execute({
+          sql: "UPDATE recipes SET household_id = ? WHERE household_id IS NULL",
+          args: [defaultHouseholdId],
+        });
+      }
+    }
+  }
+
+  const { linkUsersWithoutHousehold } = await import("./households");
+  await linkUsersWithoutHousehold();
+}
+
+export async function migrateInvites() {
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS household_invites (
+      id TEXT PRIMARY KEY,
+      token_hash TEXT NOT NULL UNIQUE,
+      household_id TEXT NOT NULL REFERENCES households(id) ON DELETE CASCADE,
+      email TEXT NOT NULL,
+      invited_by_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      expires_at TEXT NOT NULL,
+      used_at TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
 }

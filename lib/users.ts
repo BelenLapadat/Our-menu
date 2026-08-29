@@ -23,41 +23,32 @@ export async function findOrCreateUser(input: {
   name: string;
   image: string | null;
 }) {
-  const existing = await db.execute({
-    sql: "SELECT id, email, name, image FROM users WHERE google_sub = ?",
-    args: [input.googleSub],
-  });
-
-  const row = existing.rows[0];
-  if (row) {
-    await db.execute({
-      sql: `
-        UPDATE users
-        SET email = ?, name = ?, image = ?, last_login_at = CURRENT_TIMESTAMP
-        WHERE google_sub = ?
-      `,
-      args: [input.email, input.name, input.image, input.googleSub],
-    });
-
-    return mapUser(row as Record<string, unknown>);
-  }
-
-  const user = {
-    id: randomUUID(),
-    email: input.email,
-    name: input.name,
-    image: input.image,
-  };
-
-  await db.execute({
+  const result = await db.execute({
     sql: `
       INSERT INTO users (id, google_sub, email, name, image, last_login_at)
       VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(google_sub) DO UPDATE SET
+        email = excluded.email,
+        name = excluded.name,
+        image = excluded.image,
+        last_login_at = CURRENT_TIMESTAMP
+      RETURNING id, email, name, image
     `,
-    args: [user.id, input.googleSub, user.email, user.name, user.image],
+    args: [
+      randomUUID(),
+      input.googleSub,
+      input.email,
+      input.name,
+      input.image,
+    ],
   });
 
-  return user;
+  const row = result.rows[0];
+  if (!row) {
+    throw new Error("No se pudo crear o actualizar el usuario.");
+  }
+
+  return mapUser(row as Record<string, unknown>);
 }
 
 export async function getUserById(id: string) {

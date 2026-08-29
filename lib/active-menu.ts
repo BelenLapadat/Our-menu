@@ -1,13 +1,18 @@
 import { cookies } from "next/headers";
-import { createMenu, getMenu, getMenus, type Menu } from "./menus";
+import {
+  createMenu,
+  getMenu,
+  getMenusForHousehold,
+  type Menu,
+} from "./menus";
 
 export const ACTIVE_MENU_COOKIE = "active-menu-id";
 
-export async function getActiveMenu(): Promise<Menu> {
-  const menus = await getMenus();
+export async function getActiveMenu(householdId: string): Promise<Menu> {
+  const menus = await getMenusForHousehold(householdId);
 
   if (menus.length === 0) {
-    return createMenu("Mi menú");
+    return createMenu("Mi menú", householdId);
   }
 
   const cookieStore = await cookies();
@@ -19,7 +24,7 @@ export async function getActiveMenu(): Promise<Menu> {
       return menu;
     }
 
-    const menuById = await getMenu(cookieMenuId);
+    const menuById = await getMenu(cookieMenuId, householdId);
     if (menuById) {
       return menuById;
     }

@@ -35,11 +35,18 @@ async function main() {
     await db.execute(sql);
   }
 
-  const { migrateToMultiMenu, migrateSharedRecipes, migrateUsers } =
-    await import("../lib/migrate");
+  const {
+    migrateToMultiMenu,
+    migrateSharedRecipes,
+    migrateUsers,
+    migrateHouseholds,
+    migrateInvites,
+  } = await import("../lib/migrate");
   await migrateToMultiMenu();
   await migrateSharedRecipes();
   await migrateUsers();
+  await migrateHouseholds();
+  await migrateInvites();
 
   const before = await db.execute(
     "SELECT COUNT(*) AS count FROM recipes",

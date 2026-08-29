@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { asNumber, db } from "./db";
+import { createHousehold } from "./households";
 import { createMenu } from "./menus";
 
 const initialRecipes = [
@@ -31,15 +32,26 @@ export async function seedIfEmpty() {
     return;
   }
 
+  const household = await createHousehold("Mi hogar");
+
   const menuCount = await db.execute("SELECT COUNT(*) AS count FROM menus");
   if (asNumber(menuCount.rows[0]?.count) === 0) {
-    await createMenu("Mi menú");
+    await createMenu("Mi menú", household.id);
   }
 
   await db.batch(
     initialRecipes.map((recipe) => ({
-      sql: "INSERT INTO recipes (id, title, description, notes, rating) VALUES (?, ?, ?, ?, 0)",
-      args: [randomUUID(), recipe.title, recipe.description, recipe.notes],
+      sql: `
+        INSERT INTO recipes (id, title, description, notes, rating, household_id)
+        VALUES (?, ?, ?, ?, 0, ?)
+      `,
+      args: [
+        randomUUID(),
+        recipe.title,
+        recipe.description,
+        recipe.notes,
+        household.id,
+      ],
     })),
     "write",
   );

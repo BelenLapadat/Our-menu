@@ -1,11 +1,22 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getActiveMenu } from "@/lib/active-menu";
-import { getMenus } from "@/lib/menus";
+import InviteDialog from "./invite-dialog";
+import { getMenusForHousehold } from "@/lib/menus";
+import { getUserHousehold } from "@/lib/session";
 import MenuSwitcher from "./menu-switcher";
 import UserMenu from "./user-menu";
 
 export default async function Navbar() {
-  const [menus, activeMenu] = await Promise.all([getMenus(), getActiveMenu()]);
+  const household = await getUserHousehold();
+  if (!household) {
+    redirect("/login");
+  }
+
+  const [menus, activeMenu] = await Promise.all([
+    getMenusForHousehold(household.id),
+    getActiveMenu(household.id),
+  ]);
 
   return (
     <nav
@@ -34,6 +45,8 @@ export default async function Navbar() {
       </div>
 
       <div className="flex items-center gap-3">
+        <span className="hidden text-sm text-zinc-500 sm:inline">{household.name}</span>
+        <InviteDialog />
         <MenuSwitcher menus={menus} activeMenuId={activeMenu.id} />
         <UserMenu />
       </div>

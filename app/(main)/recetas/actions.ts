@@ -8,10 +8,10 @@ import {
   updateRecipeRating,
 } from "@/lib/recipes";
 import { revalidateAfterRecipeChange } from "@/lib/revalidate";
-import { requireUser } from "@/lib/session";
+import { requireUserWithHousehold } from "@/lib/session";
 
 export async function addRecipe(formData: FormData) {
-  await requireUser();
+  const { household } = await requireUserWithHousehold();
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const notes = String(formData.get("notes") ?? "").trim();
@@ -20,26 +20,26 @@ export async function addRecipe(formData: FormData) {
     throw new Error("El titulo y la descripcion son obligatorios.");
   }
 
-  await createRecipe({ title, description, notes });
+  await createRecipe({ title, description, notes }, household.id);
   revalidateAfterRecipeChange();
   redirect("/recetas");
 }
 
 export async function deleteRecipe(formData: FormData) {
-  await requireUser();
+  const { household } = await requireUserWithHousehold();
   const id = String(formData.get("id") ?? "").trim();
 
   if (!id) {
     throw new Error("La receta no es valida.");
   }
 
-  await removeRecipe(id);
+  await removeRecipe(id, household.id);
   revalidateAfterRecipeChange();
   redirect("/recetas?deleted=1");
 }
 
 export async function updateRecipe(formData: FormData) {
-  await requireUser();
+  const { household } = await requireUserWithHousehold();
   const id = String(formData.get("id") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
@@ -54,13 +54,13 @@ export async function updateRecipe(formData: FormData) {
     throw new Error("La valoracion no es valida.");
   }
 
-  await saveRecipe({ id, title, description, notes, rating });
+  await saveRecipe({ id, title, description, notes, rating }, household.id);
   revalidateAfterRecipeChange();
   redirect("/recetas");
 }
 
 export async function rateRecipe(formData: FormData) {
-  await requireUser();
+  const { household } = await requireUserWithHousehold();
   const id = String(formData.get("id") ?? "").trim();
   const rating = Number(formData.get("rating"));
 
@@ -68,6 +68,6 @@ export async function rateRecipe(formData: FormData) {
     throw new Error("La valoracion no es valida.");
   }
 
-  await updateRecipeRating(id, rating);
+  await updateRecipeRating(id, rating, household.id);
   revalidateAfterRecipeChange();
 }

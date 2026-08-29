@@ -124,13 +124,21 @@ export async function updateMeal(
   recipeIds: string[],
   effects: string,
 ) {
-  await db.execute({
-    sql: "DELETE FROM meal_recipes WHERE meal_id = ?",
-    args: [id],
+  const mealCheck = await db.execute({
+    sql: "SELECT 1 FROM meals WHERE id = ? AND menu_id = ?",
+    args: [id, menuId],
   });
+
+  if (mealCheck.rows.length === 0) {
+    throw new Error("La comida no es valida.");
+  }
 
   await db.batch(
     [
+      {
+        sql: "DELETE FROM meal_recipes WHERE meal_id = ?",
+        args: [id],
+      },
       ...recipeIds.map((recipeId) => ({
         sql: "INSERT INTO meal_recipes (meal_id, recipe_id) VALUES (?, ?)",
         args: [id, recipeId],
@@ -145,10 +153,14 @@ export async function updateMeal(
 }
 
 export async function deleteMeal(id: string, menuId: string) {
-  await db.execute({
+  const result = await db.execute({
     sql: "DELETE FROM meals WHERE id = ? AND menu_id = ?",
     args: [id, menuId],
   });
+
+  if (result.rowsAffected === 0) {
+    throw new Error("La comida no es valida.");
+  }
 }
 
 export async function getDatesWithMealNotes(menuId: string) {

@@ -10,9 +10,34 @@ CREATE TABLE IF NOT EXISTS users (
   last_login_at TEXT
 );
 
+CREATE TABLE IF NOT EXISTS households (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS household_members (
+  household_id TEXT NOT NULL REFERENCES households(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  joined_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (household_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS household_invites (
+  id TEXT PRIMARY KEY,
+  token_hash TEXT NOT NULL UNIQUE,
+  household_id TEXT NOT NULL REFERENCES households(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  invited_by_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  expires_at TEXT NOT NULL,
+  used_at TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS menus (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
+  household_id TEXT NOT NULL REFERENCES households(id) ON DELETE CASCADE,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -23,6 +48,7 @@ CREATE TABLE IF NOT EXISTS recipes (
   notes TEXT NOT NULL DEFAULT '',
   deleted_at TEXT,
   rating INTEGER NOT NULL DEFAULT 0,
+  household_id TEXT NOT NULL REFERENCES households(id) ON DELETE CASCADE,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

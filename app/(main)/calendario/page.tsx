@@ -1,6 +1,8 @@
+import { redirect } from "next/navigation";
 import { getActiveMenu } from "@/lib/active-menu";
 import { getDatesWithMealNotes, getMealsBetween } from "@/lib/meals";
 import { getRecipes } from "@/lib/recipes";
+import { getUserHousehold } from "@/lib/session";
 import {
   dateKey,
   getWeekDays,
@@ -31,9 +33,14 @@ export default async function CalendarPage({
       ? requestedDate
       : undefined;
   const selectedDay = validRequestedDate ?? dateKey(anchorDate);
-  const activeMenu = await getActiveMenu();
+  const household = await getUserHousehold();
+  if (!household) {
+    redirect("/login");
+  }
+
+  const activeMenu = await getActiveMenu(household.id);
   const [recipes, meals, notedDates] = await Promise.all([
-    getRecipes(),
+    getRecipes(household.id),
     getMealsBetween(
       activeMenu.id,
       dateKey(monday),

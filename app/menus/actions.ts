@@ -3,9 +3,9 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ACTIVE_MENU_COOKIE } from "@/lib/active-menu";
-import { createMenu, deleteMenu } from "@/lib/menus";
+import { createMenu, deleteMenu, getMenu } from "@/lib/menus";
 import { revalidateAfterMenuChange } from "@/lib/revalidate";
-import { requireUser } from "@/lib/session";
+import { requireUserWithHousehold } from "@/lib/session";
 
 function sanitizeReturnPath(value: FormDataEntryValue | null) {
   const path = String(value ?? "").trim();
@@ -34,11 +34,16 @@ async function setActiveMenuCookie(menuId: string) {
 }
 
 export async function switchMenu(formData: FormData) {
-  await requireUser();
+  const { household } = await requireUserWithHousehold();
   const menuId = String(formData.get("menuId") ?? "").trim();
   const returnTo = sanitizeReturnPath(formData.get("returnTo"));
 
   if (!menuId) {
+    throw new Error("El menu no es valido.");
+  }
+
+  const menu = await getMenu(menuId, household.id);
+  if (!menu) {
     throw new Error("El menu no es valido.");
   }
 
@@ -48,7 +53,7 @@ export async function switchMenu(formData: FormData) {
 }
 
 export async function addMenu(formData: FormData) {
-  await requireUser();
+  const { household } = await requireUserWithHousehold();
   const name = String(formData.get("name") ?? "").trim();
   const returnTo = sanitizeReturnPath(formData.get("returnTo"));
 
@@ -56,14 +61,14 @@ export async function addMenu(formData: FormData) {
     throw new Error("El nombre del menu es obligatorio.");
   }
 
-  const menu = await createMenu(name);
+  const menu = await createMenu(name, household.id);
   await setActiveMenuCookie(menu.id);
   revalidateAfterMenuChange();
   redirect(returnTo);
 }
 
 export async function removeMenu(formData: FormData) {
-  await requireUser();
+  const { household } = await requireUserWithHousehold();
   const menuId = String(formData.get("menuId") ?? "").trim();
   const returnTo = sanitizeReturnPath(formData.get("returnTo"));
 
@@ -71,7 +76,7 @@ export async function removeMenu(formData: FormData) {
     throw new Error("El menu no es valido.");
   }
 
-  await deleteMenu(menuId);
+  await deleteMenu(menuId, household.id);
 
   const cookieStore = await cookies();
   if (cookieStore.get(ACTIVE_MENU_COOKIE)?.value === menuId) {

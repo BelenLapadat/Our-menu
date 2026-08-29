@@ -10,13 +10,13 @@ import {
 import { validateMealInput } from "@/lib/meal-validation";
 import { revalidateAfterMealChange } from "@/lib/revalidate";
 import { getRecipes } from "@/lib/recipes";
-import { requireUser } from "@/lib/session";
+import { requireUserWithHousehold } from "@/lib/session";
 
 export async function addMeal(formData: FormData) {
-  await requireUser();
-  const activeMenu = await getActiveMenu();
+  const { household } = await requireUserWithHousehold();
+  const activeMenu = await getActiveMenu(household.id);
   const availableRecipeIds = new Set(
-    (await getRecipes()).map((recipe) => recipe.id),
+    (await getRecipes(household.id)).map((recipe) => recipe.id),
   );
   const { date, recipeIds, effects } = validateMealInput(
     formData,
@@ -29,10 +29,10 @@ export async function addMeal(formData: FormData) {
 }
 
 export async function updateMeal(formData: FormData) {
-  await requireUser();
-  const activeMenu = await getActiveMenu();
+  const { household } = await requireUserWithHousehold();
+  const activeMenu = await getActiveMenu(household.id);
   const availableRecipeIds = new Set(
-    (await getRecipes()).map((recipe) => recipe.id),
+    (await getRecipes(household.id)).map((recipe) => recipe.id),
   );
   const { id, date, recipeIds, effects } = validateMealInput(
     formData,
@@ -46,8 +46,8 @@ export async function updateMeal(formData: FormData) {
 }
 
 export async function deleteMeal(formData: FormData) {
-  await requireUser();
-  const activeMenu = await getActiveMenu();
+  const { household } = await requireUserWithHousehold();
+  const activeMenu = await getActiveMenu(household.id);
   const id = String(formData.get("id") ?? "").trim();
   const date = String(formData.get("date") ?? "").trim();
 

@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import DeletionNotice from "@/app/components/deletion-notice";
 import RecipeList from "./recipe-list";
 import { getRecipes } from "@/lib/recipes";
+import { getUserHousehold } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +13,12 @@ export default async function RecetasPage({
   searchParams: Promise<{ deleted?: string; recipe?: string }>;
 }) {
   const { deleted, recipe: selectedRecipeId } = await searchParams;
-  const recipes = await getRecipes();
+  const household = await getUserHousehold();
+  if (!household) {
+    redirect("/login");
+  }
+
+  const recipes = await getRecipes(household.id);
 
   return (
     <main className="flex-1 bg-zinc-50 px-6 py-16 dark:bg-black sm:px-16">
