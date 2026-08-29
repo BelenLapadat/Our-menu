@@ -5,7 +5,17 @@ export default function Footer() {
       <span className="mx-2" aria-hidden="true">
         ·
       </span>
-      <span>Made with love by Belen Lapadat</span>
+      <span>
+        Made with love by{" "}
+        <a
+          href="https://github.com/BelenLapadat"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-zinc-700 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-zinc-50"
+        >
+          Belen
+        </a>
+      </span>
     </footer>
   );
 }
