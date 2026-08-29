@@ -28,6 +28,7 @@ function mapMealRecipeRow(row: Record<string, unknown>): MealRecipeRow {
 }
 
 export async function getMealsBetween(
+  menuId: string,
   startDate: string,
   endDate: string,
   today: string,
@@ -38,11 +39,12 @@ export async function getMealsBetween(
       FROM meals
       JOIN meal_recipes ON meal_recipes.meal_id = meals.id
       JOIN recipes ON recipes.id = meal_recipes.recipe_id
-      WHERE meals.meal_date BETWEEN ? AND ?
+      WHERE meals.menu_id = ?
+        AND meals.meal_date BETWEEN ? AND ?
         AND (meals.meal_date < ? OR recipes.deleted_at IS NULL)
       ORDER BY meals.meal_date, meals.created_at, meal_recipes.rowid
     `,
-    args: [startDate, endDate, today],
+    args: [menuId, startDate, endDate, today],
   });
 
   const groupedMeals = new Map<string, Meal>();
@@ -66,19 +68,24 @@ export async function getMealsBetween(
   return Array.from(groupedMeals.values());
 }
 
-export async function getMostSelectedRecipes(startDate: string, endDate: string) {
+export async function getMostSelectedRecipes(
+  menuId: string,
+  startDate: string,
+  endDate: string,
+) {
   const result = await db.execute({
     sql: `
       SELECT recipes.id AS recipe_id, recipes.title AS recipe_title, COUNT(*) AS selections
       FROM meal_recipes
       JOIN meals ON meals.id = meal_recipes.meal_id
       JOIN recipes ON recipes.id = meal_recipes.recipe_id
-      WHERE meals.meal_date BETWEEN ? AND ?
+      WHERE meals.menu_id = ?
+        AND meals.meal_date BETWEEN ? AND ?
       GROUP BY recipes.id, recipes.title
       ORDER BY selections DESC, recipes.title COLLATE NOCASE
       LIMIT 5
     `,
-    args: [startDate, endDate],
+    args: [menuId, startDate, endDate],
   });
 
   return result.rows.map((row) => ({
@@ -89,6 +96,7 @@ export async function getMostSelectedRecipes(startDate: string, endDate: string)
 }
 
 export async function createMeal(
+  menuId: string,
   date: string,
   recipeIds: string[],
   effects: string,
@@ -98,8 +106,8 @@ export async function createMeal(
   await db.batch(
     [
       {
-        sql: "INSERT INTO meals (id, meal_date, effects) VALUES (?, ?, ?)",
-        args: [mealId, date, effects],
+        sql: "INSERT INTO meals (id, menu_id, meal_date, effects) VALUES (?, ?, ?, ?)",
+        args: [mealId, menuId, date, effects],
       },
       ...recipeIds.map((recipeId) => ({
         sql: "INSERT INTO meal_recipes (meal_id, recipe_id) VALUES (?, ?)",
@@ -112,6 +120,7 @@ export async function createMeal(
 
 export async function updateMeal(
   id: string,
+  menuId: string,
   recipeIds: string[],
   effects: string,
 ) {
@@ -127,28 +136,31 @@ export async function updateMeal(
         args: [id, recipeId],
       })),
       {
-        sql: "UPDATE meals SET effects = ? WHERE id = ?",
-        args: [effects, id],
+        sql: "UPDATE meals SET effects = ? WHERE id = ? AND menu_id = ?",
+        args: [effects, id, menuId],
       },
     ],
     "write",
   );
 }
 
-export async function deleteMeal(id: string) {
+export async function deleteMeal(id: string, menuId: string) {
   await db.execute({
-    sql: "DELETE FROM meals WHERE id = ?",
-    args: [id],
+    sql: "DELETE FROM meals WHERE id = ? AND menu_id = ?",
+    args: [id, menuId],
   });
 }
 
-export async function getDatesWithMealNotes() {
-  const result = await db.execute(`
-    SELECT DISTINCT meal_date
-    FROM meals
-    WHERE TRIM(effects) != ''
-    ORDER BY meal_date
-  `);
+export async function getDatesWithMealNotes(menuId: string) {
+  const result = await db.execute({
+    sql: `
+      SELECT DISTINCT meal_date
+      FROM meals
+      WHERE menu_id = ? AND TRIM(effects) != ''
+      ORDER BY meal_date
+    `,
+    args: [menuId],
+  });
 
   return result.rows.map((row) => asString(row.meal_date));
 }

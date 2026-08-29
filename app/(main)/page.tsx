@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CalendarDays, Star } from "lucide-react";
+import { getActiveMenu } from "@/lib/active-menu";
 import { dateDaysAgo, dateKey } from "@/lib/dates";
 import {
   getMealsBetween,
@@ -142,13 +143,14 @@ function StatisticsSection({
 }
 
 export default async function Home() {
+  const activeMenu = await getActiveMenu();
   const today = dateKey(new Date());
   const [todayMeals, bestRatedRecipes, weekMostSelected, monthMostSelected] =
     await Promise.all([
-      getMealsBetween(today, today, today),
+      getMealsBetween(activeMenu.id, today, today, today),
       getBestRatedRecipes(),
-      getMostSelectedRecipes(dateDaysAgo(6), today),
-      getMostSelectedRecipes(dateDaysAgo(29), today),
+      getMostSelectedRecipes(activeMenu.id, dateDaysAgo(6), today),
+      getMostSelectedRecipes(activeMenu.id, dateDaysAgo(29), today),
     ]);
 
   return (

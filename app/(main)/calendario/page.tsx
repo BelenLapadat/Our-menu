@@ -1,3 +1,4 @@
+import { getActiveMenu } from "@/lib/active-menu";
 import { getDatesWithMealNotes, getMealsBetween } from "@/lib/meals";
 import { getRecipes } from "@/lib/recipes";
 import {
@@ -30,10 +31,16 @@ export default async function CalendarPage({
       ? requestedDate
       : undefined;
   const selectedDay = validRequestedDate ?? dateKey(anchorDate);
+  const activeMenu = await getActiveMenu();
   const [recipes, meals, notedDates] = await Promise.all([
     getRecipes(),
-    getMealsBetween(dateKey(monday), dateKey(sunday), dateKey(today)),
-    getDatesWithMealNotes(),
+    getMealsBetween(
+      activeMenu.id,
+      dateKey(monday),
+      dateKey(sunday),
+      dateKey(today),
+    ),
+    getDatesWithMealNotes(activeMenu.id),
   ]);
 
   return (

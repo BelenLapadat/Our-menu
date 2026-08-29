@@ -10,3 +10,7 @@ export function revalidateAfterRecipeChange() {
   revalidatePath("/calendario");
   revalidatePath("/");
 }
+
+export function revalidateAfterMenuChange() {
+  revalidatePath("/", "layout");
+}

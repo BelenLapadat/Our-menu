@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { asNumber, db } from "./db";
+import { createMenu } from "./menus";
 
 const initialRecipes = [
   {
@@ -28,6 +29,11 @@ export async function seedIfEmpty() {
 
   if (count > 0) {
     return;
+  }
+
+  const menuCount = await db.execute("SELECT COUNT(*) AS count FROM menus");
+  if (asNumber(menuCount.rows[0]?.count) === 0) {
+    await createMenu("Mi menú");
   }
 
   await db.batch(

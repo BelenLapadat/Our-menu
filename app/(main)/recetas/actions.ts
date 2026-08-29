@@ -8,8 +8,10 @@ import {
   updateRecipeRating,
 } from "@/lib/recipes";
 import { revalidateAfterRecipeChange } from "@/lib/revalidate";
+import { requireUser } from "@/lib/session";
 
 export async function addRecipe(formData: FormData) {
+  await requireUser();
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const notes = String(formData.get("notes") ?? "").trim();
@@ -24,6 +26,7 @@ export async function addRecipe(formData: FormData) {
 }
 
 export async function deleteRecipe(formData: FormData) {
+  await requireUser();
   const id = String(formData.get("id") ?? "").trim();
 
   if (!id) {
@@ -36,6 +39,7 @@ export async function deleteRecipe(formData: FormData) {
 }
 
 export async function updateRecipe(formData: FormData) {
+  await requireUser();
   const id = String(formData.get("id") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
@@ -56,6 +60,7 @@ export async function updateRecipe(formData: FormData) {
 }
 
 export async function rateRecipe(formData: FormData) {
+  await requireUser();
   const id = String(formData.get("id") ?? "").trim();
   const rating = Number(formData.get("rating"));
 
