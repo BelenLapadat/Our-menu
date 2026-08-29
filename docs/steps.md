@@ -119,27 +119,30 @@ Goal: invite another Google user to join the same household.
 - [x] Defer household bootstrap on sign-in; accept adds membership without requiring prior household
 - [x] Invite button in navbar with copy-link dialog
 
-### Verification (deferred until Phase 4)
+### Verification (production)
 
-Invite links use the app’s public URL. On localhost, only same-machine testing is possible (e.g. two browsers). Full multi-user invite testing waits until production deploy.
+Verified on `https://our-menu-kappa.vercel.app` (Aug 2026).
 
-- [ ] Member creates invite and copies link (production URL)
-- [ ] Invitee opens link on another device, signs in with Google, accepts
-- [ ] Invitee sees inviter’s menus and recipes
-- [ ] Expired or used invite shows the correct error
-- [ ] Invitee who already belongs to the household is redirected home
+- [x] Member creates invite and copies link (production URL)
+- [x] Invitee opens link on another device, signs in with Google, accepts
+- [x] Invitee sees inviter’s menus and recipes; both users can edit the same menu
+- [x] Used invite link cannot be reused (single-use enforced)
+- [ ] Expired invite shows the correct error (not manually tested)
+- [ ] Invitee who already belongs to the household is redirected home (not manually tested)
 
 ---
 
-## Remaining: Production deploy (Phase 4)
+## Completed: Production deploy (Phase 4)
 
-- [ ] Create Turso database
-- [ ] Run `TURSO_DATABASE_URL=... TURSO_AUTH_TOKEN=... npm run db:setup` on Turso
-- [ ] Deploy to Vercel
-- [ ] Set env vars: `TURSO_*`, `AUTH_*` (and optionally `AUTH_URL`)
-- [ ] Add production redirect URI in Google Console: `https://<your-app>.vercel.app/api/auth/callback/google`
-- [ ] Move OAuth app to **In production** (or add all users as test users)
-- [ ] Run Phase 3 verification checklist above on the deployed app
+Live at [our-menu-kappa.vercel.app](https://our-menu-kappa.vercel.app).
+
+- [x] Create Turso database
+- [x] Run `TURSO_DATABASE_URL=... TURSO_AUTH_TOKEN=... npm run db:setup` on Turso
+- [x] Deploy to Vercel
+- [x] Set env vars: `TURSO_*`, `AUTH_*`, `AUTH_URL` (Production only)
+- [x] Add production redirect URI in Google Console (`https://our-menu-kappa.vercel.app/api/auth/callback/google` — must use **https**, not http)
+- [x] OAuth app in **Testing** mode with test users added
+- [x] Phase 3 verification on deployed app (core invite flow confirmed)
 
 ---
 
@@ -185,5 +188,5 @@ Invite links use the app’s public URL. On localhost, only same-machine testing
 2. ~~Phase 2 — household model and data scoping~~ ✓ Done
 3. ~~Phase 1 & 2 security review fixes~~ ✓ Done
 4. ~~Phase 3 — invite flow~~ ✓ Done
-5. Phase 4 — production deploy (Turso + Vercel + Google production redirect)
-6. Phase 3 verification — multi-user invite testing on deployed URL
+5. ~~Phase 4 — production deploy (Turso + Vercel + Google production redirect)~~ ✓ Done
+6. ~~Phase 3 verification — multi-user invite testing on deployed URL~~ ✓ Done (core flow)
