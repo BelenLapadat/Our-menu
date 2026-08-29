@@ -3,6 +3,7 @@ export type ValidatedMealInput = {
   date: string;
   recipeIds: string[];
   effects: string;
+  updatedAt?: string;
 };
 
 export function validateMealInput(
@@ -13,6 +14,7 @@ export function validateMealInput(
   const id = String(formData.get("id") ?? "").trim();
   const date = String(formData.get("date") ?? "").trim();
   const effects = String(formData.get("effects") ?? "").trim();
+  const updatedAt = String(formData.get("updatedAt") ?? "").trim();
   const rawRecipeIds = String(formData.get("recipeIds") ?? "[]");
 
   let recipeIds: unknown;
@@ -39,5 +41,15 @@ export function validateMealInput(
     throw new Error("La comida no es valida.");
   }
 
-  return { id: id || undefined, date, recipeIds: validRecipeIds, effects };
+  if (requireId && !updatedAt) {
+    throw new Error("La comida no es valida.");
+  }
+
+  return {
+    id: id || undefined,
+    date,
+    recipeIds: validRecipeIds,
+    effects,
+    updatedAt: updatedAt || undefined,
+  };
 }

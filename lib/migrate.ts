@@ -232,6 +232,22 @@ export async function migrateHouseholds() {
   await linkUsersWithoutHousehold();
 }
 
+export async function migrateMealUpdatedAt() {
+  if (!(await tableExists("meals"))) {
+    return;
+  }
+
+  if (await tableHasColumn("meals", "updated_at")) {
+    return;
+  }
+
+  await db.execute("ALTER TABLE meals ADD COLUMN updated_at TEXT");
+
+  await db.execute(
+    "UPDATE meals SET updated_at = created_at WHERE updated_at IS NULL",
+  );
+}
+
 export async function migrateInvites() {
   await db.execute(`
     CREATE TABLE IF NOT EXISTS household_invites (

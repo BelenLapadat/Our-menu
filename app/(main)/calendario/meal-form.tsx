@@ -135,6 +135,9 @@ export default function MealForm({
           className="mt-6 flex flex-col gap-5"
         >
           {meal && <input type="hidden" name="id" value={meal.id} />}
+          {meal && (
+            <input type="hidden" name="updatedAt" value={meal.updatedAt} />
+          )}
           <input type="hidden" name="date" value={date} />
           <input
             type="hidden"

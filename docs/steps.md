@@ -99,9 +99,9 @@ Goal: each household has its own menus and recipes; multiple users can collabora
 
 ### UI
 
-- [ ] Household switcher (deferred — multiple households per user; needed after Phase 3 invites)
+- [ ] Household switcher (deferred — likely unnecessary; menus + invites may be enough)
 - [x] Menu switcher shows only menus in the current household
-- [x] Show household name in navbar
+- [x] ~~Show household name in navbar~~ removed — generic label added visual noise
 - [x] Pages redirect to `/login` when household is missing (no blank renders)
 
 ---

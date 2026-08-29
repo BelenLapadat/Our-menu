@@ -17,10 +17,16 @@ export const dynamic = "force-dynamic";
 export default async function CalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string; mealDeleted?: string; notes?: string }>;
+  searchParams: Promise<{
+    date?: string;
+    mealDeleted?: string;
+    mealConflict?: string;
+    notes?: string;
+  }>;
 }) {
   const today = new Date();
-  const { date: requestedDate, mealDeleted, notes } = await searchParams;
+  const { date: requestedDate, mealDeleted, mealConflict, notes } =
+    await searchParams;
   const anchorDate = isDateKey(requestedDate)
     ? new Date(`${requestedDate}T00:00:00`)
     : today;
@@ -54,6 +60,12 @@ export default async function CalendarPage({
     <>
       {mealDeleted === "1" && (
         <DeletionNotice message="La comida ha sido borrada" />
+      )}
+      {mealConflict === "1" && (
+        <DeletionNotice
+          variant="warning"
+          message="Esta comida cambio mientras la editabas. Actualiza la pagina e intentalo de nuevo."
+        />
       )}
       <CalendarView
         days={days}

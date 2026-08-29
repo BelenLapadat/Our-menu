@@ -39,6 +39,7 @@ export default function DeleteMealDialog({
           <form action={deleteMeal}>
             <input type="hidden" name="id" value={meal.id} />
             <input type="hidden" name="date" value={date} />
+            <input type="hidden" name="updatedAt" value={meal.updatedAt} />
             <button
               type="submit"
               className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"

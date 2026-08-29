@@ -18,6 +18,8 @@ import {
 import WeekDaySelector from "./week-day-selector";
 import WeekHeader from "./week-header";
 
+const CALENDAR_REFRESH_MS = 25_000;
+
 const dayFormatter = new Intl.DateTimeFormat("es", {
   weekday: "long",
   day: "numeric",
@@ -61,6 +63,31 @@ export default function CalendarView({
   const selectedDate = dateFromKey(selectedDay);
   const selectedMeals = meals.filter((meal) => meal.date === selectedDay);
   const selectedDayHasNote = notedDateSet.has(selectedDay);
+  const isModalOpen =
+    isMealModalOpen || mealToEdit !== null || mealToDelete !== null;
+
+  useEffect(() => {
+    if (isModalOpen) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      router.refresh();
+    }, CALENDAR_REFRESH_MS);
+
+    return () => window.clearInterval(intervalId);
+  }, [isModalOpen, router]);
+
+  useEffect(() => {
+    function handleFocus() {
+      if (!isModalOpen) {
+        router.refresh();
+      }
+    }
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [isModalOpen, router]);
 
   useEffect(() => {
     if (!initialNotesFilter || notedDates.includes(initialSelectedDay)) {

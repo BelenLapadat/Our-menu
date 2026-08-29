@@ -162,7 +162,7 @@ export default async function Home() {
 
   return (
     <main className="flex-1 bg-zinc-50 px-6 py-16 dark:bg-black sm:px-16">
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-12">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-12">
         <header>
           <p className="mb-2 text-sm font-medium uppercase tracking-widest text-zinc-500">
             Nuestro Menusito

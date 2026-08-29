@@ -7,7 +7,15 @@ export type Meal = {
   recipeIds: string[];
   recipeTitles: string[];
   effects: string;
+  updatedAt: string;
 };
+
+export class MealConflictError extends Error {
+  constructor(message = "Otra persona actualizo esta comida. Actualiza la pagina e intentalo de nuevo.") {
+    super(message);
+    this.name = "MealConflictError";
+  }
+}
 
 type MealRecipeRow = {
   id: string;
@@ -15,6 +23,7 @@ type MealRecipeRow = {
   recipe_id: string;
   recipe_title: string;
   effects: string;
+  updated_at: string;
 };
 
 function mapMealRecipeRow(row: Record<string, unknown>): MealRecipeRow {
@@ -24,6 +33,7 @@ function mapMealRecipeRow(row: Record<string, unknown>): MealRecipeRow {
     recipe_id: asString(row.recipe_id),
     recipe_title: asString(row.recipe_title),
     effects: asString(row.effects),
+    updated_at: asString(row.updated_at),
   };
 }
 
@@ -35,7 +45,8 @@ export async function getMealsBetween(
 ) {
   const result = await db.execute({
     sql: `
-      SELECT meals.id, meals.meal_date, meals.effects, recipes.id AS recipe_id, recipes.title AS recipe_title
+      SELECT meals.id, meals.meal_date, meals.effects, meals.updated_at,
+             recipes.id AS recipe_id, recipes.title AS recipe_title
       FROM meals
       JOIN meal_recipes ON meal_recipes.meal_id = meals.id
       JOIN recipes ON recipes.id = meal_recipes.recipe_id
@@ -58,6 +69,7 @@ export async function getMealsBetween(
       recipeIds: [],
       recipeTitles: [],
       effects: row.effects,
+      updatedAt: row.updated_at,
     };
 
     meal.recipeIds.push(row.recipe_id);
@@ -106,7 +118,7 @@ export async function createMeal(
   await db.batch(
     [
       {
-        sql: "INSERT INTO meals (id, menu_id, meal_date, effects) VALUES (?, ?, ?, ?)",
+        sql: "INSERT INTO meals (id, menu_id, meal_date, effects, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)",
         args: [mealId, menuId, date, effects],
       },
       ...recipeIds.map((recipeId) => ({
@@ -118,20 +130,34 @@ export async function createMeal(
   );
 }
 
+async function assertMealVersion(
+  id: string,
+  menuId: string,
+  expectedUpdatedAt: string,
+) {
+  const mealCheck = await db.execute({
+    sql: "SELECT updated_at FROM meals WHERE id = ? AND menu_id = ?",
+    args: [id, menuId],
+  });
+
+  if (mealCheck.rows.length === 0) {
+    throw new MealConflictError("Esta comida ya no existe.");
+  }
+
+  const currentUpdatedAt = asString(mealCheck.rows[0]?.updated_at);
+  if (currentUpdatedAt !== expectedUpdatedAt) {
+    throw new MealConflictError();
+  }
+}
+
 export async function updateMeal(
   id: string,
   menuId: string,
   recipeIds: string[],
   effects: string,
+  expectedUpdatedAt: string,
 ) {
-  const mealCheck = await db.execute({
-    sql: "SELECT 1 FROM meals WHERE id = ? AND menu_id = ?",
-    args: [id, menuId],
-  });
-
-  if (mealCheck.rows.length === 0) {
-    throw new Error("La comida no es valida.");
-  }
+  await assertMealVersion(id, menuId, expectedUpdatedAt);
 
   await db.batch(
     [
@@ -144,7 +170,11 @@ export async function updateMeal(
         args: [id, recipeId],
       })),
       {
-        sql: "UPDATE meals SET effects = ? WHERE id = ? AND menu_id = ?",
+        sql: `
+          UPDATE meals
+          SET effects = ?, updated_at = CURRENT_TIMESTAMP
+          WHERE id = ? AND menu_id = ?
+        `,
         args: [effects, id, menuId],
       },
     ],
@@ -152,14 +182,20 @@ export async function updateMeal(
   );
 }
 
-export async function deleteMeal(id: string, menuId: string) {
+export async function deleteMeal(
+  id: string,
+  menuId: string,
+  expectedUpdatedAt: string,
+) {
+  await assertMealVersion(id, menuId, expectedUpdatedAt);
+
   const result = await db.execute({
     sql: "DELETE FROM meals WHERE id = ? AND menu_id = ?",
     args: [id, menuId],
   });
 
   if (result.rowsAffected === 0) {
-    throw new Error("La comida no es valida.");
+    throw new MealConflictError("Esta comida ya no existe.");
   }
 }
 
