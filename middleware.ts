@@ -4,7 +4,10 @@ import { sanitizeInternalPath } from "@/lib/safe-path";
 
 export async function middleware(request: NextRequest) {
   const { nextUrl } = request;
-  const isLoginPage = nextUrl.pathname === "/login";
+  const isPublicPage =
+    nextUrl.pathname === "/login" ||
+    nextUrl.pathname === "/terminos" ||
+    nextUrl.pathname === "/privacidad";
 
   const token = await getToken({
     req: request,
@@ -13,7 +16,7 @@ export async function middleware(request: NextRequest) {
   });
   const isLoggedIn = !!token?.userId;
 
-  if (!isLoggedIn && !isLoginPage) {
+  if (!isLoggedIn && !isPublicPage) {
     const callbackUrl = encodeURIComponent(
       `${nextUrl.pathname}${nextUrl.search}`,
     );
@@ -22,7 +25,7 @@ export async function middleware(request: NextRequest) {
     );
   }
 
-  if (isLoggedIn && isLoginPage) {
+  if (isLoggedIn && nextUrl.pathname === "/login") {
     const redirectTo = sanitizeInternalPath(
       nextUrl.searchParams.get("callbackUrl"),
     );
