@@ -1,6 +1,8 @@
-import { signIn } from "@/auth";
 import Footer from "@/app/components/footer";
 import { sanitizeInternalPath } from "@/lib/safe-path";
+import { signInWithGoogle } from "./actions";
+
+export const dynamic = "force-dynamic";
 
 const errorMessages: Record<string, string> = {
   OAuthSignin: "No se pudo iniciar sesion con Google.",
@@ -43,13 +45,8 @@ export default async function LoginPage({
             </p>
           )}
 
-          <form
-            action={async () => {
-              "use server";
-              await signIn("google", { redirectTo });
-            }}
-            className="mt-8"
-          >
+          <form action={signInWithGoogle} className="mt-8">
+            <input type="hidden" name="redirectTo" value={redirectTo} />
             <button
               type="submit"
               className="flex w-full items-center justify-center gap-3 rounded-lg bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-950 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200 dark:focus-visible:outline-white"
