@@ -7,9 +7,8 @@ import type { CalendarDay } from "@/lib/dates";
 import { dateFromKey, dateKey } from "@/lib/dates";
 import type { Meal } from "@/lib/meals";
 import type { Recipe } from "@/lib/recipes";
-import CreateMealModal from "./create-meal-modal";
+import MealForm from "./meal-form";
 import DeleteMealDialog from "./delete-meal-dialog";
-import EditMealModal from "./edit-meal-modal";
 import MealList from "./meal-list";
 import {
   findBestNotedDay,
@@ -284,14 +283,14 @@ export default function CalendarView({
       </div>
 
       {isMealModalOpen && (
-        <CreateMealModal
+        <MealForm
           date={selectedDay}
           recipes={recipes}
           onCancel={() => setIsMealModalOpen(false)}
         />
       )}
       {mealToEdit && (
-        <EditMealModal
+        <MealForm
           date={selectedDay}
           recipes={recipes}
           meal={mealToEdit}

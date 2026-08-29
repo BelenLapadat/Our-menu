@@ -1,17 +1,13 @@
-import { redirect } from "next/navigation";
-import { getActiveMenu } from "@/lib/active-menu";
 import InviteDialog from "./invite-dialog";
 import NavLinks from "./nav-links";
+import { getActiveMenu } from "@/lib/active-menu";
 import { getMenusForHousehold } from "@/lib/menus";
-import { getUserHousehold } from "@/lib/session";
+import { requireUserWithHousehold } from "@/lib/session";
 import MenuSwitcher from "./menu-switcher";
 import UserMenu from "./user-menu";
 
 export default async function Navbar() {
-  const household = await getUserHousehold();
-  if (!household) {
-    redirect("/login");
-  }
+  const { household } = await requireUserWithHousehold();
 
   const [menus, activeMenu] = await Promise.all([
     getMenusForHousehold(household.id),

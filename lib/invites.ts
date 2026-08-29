@@ -16,6 +16,7 @@ export type HouseholdInvite = {
 };
 
 export type InvitePreview = {
+  householdId: string;
   householdName: string;
   email: string;
   expiresAt: string;
@@ -130,16 +131,6 @@ export async function createHouseholdInvite(
   };
 }
 
-export async function getInviteHouseholdId(rawToken: string) {
-  const token = rawToken.trim();
-  if (!token) {
-    return null;
-  }
-
-  const invite = await getInviteByTokenHash(hashInviteToken(token));
-  return invite?.householdId;
-}
-
 export async function getInvitePreview(rawToken: string): Promise<InvitePreview | null> {
   const token = rawToken.trim();
   if (!token) {
@@ -152,6 +143,7 @@ export async function getInvitePreview(rawToken: string): Promise<InvitePreview 
   }
 
   return {
+    householdId: invite.householdId,
     householdName: invite.householdName,
     email: invite.email,
     expiresAt: invite.expiresAt,

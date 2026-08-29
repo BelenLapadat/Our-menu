@@ -8,6 +8,7 @@ import {
   MealConflictError,
   updateMeal as saveMeal,
 } from "@/lib/meals";
+import { isDateKey } from "@/lib/dates";
 import { validateMealInput } from "@/lib/meal-validation";
 import { revalidateAfterMealChange } from "@/lib/revalidate";
 import { getRecipes } from "@/lib/recipes";
@@ -67,7 +68,7 @@ export async function deleteMeal(formData: FormData) {
   const date = String(formData.get("date") ?? "").trim();
   const updatedAt = String(formData.get("updatedAt") ?? "").trim();
 
-  if (!id || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !updatedAt) {
+  if (!id || !isDateKey(date) || !updatedAt) {
     throw new Error("La comida no es valida.");
   }
 

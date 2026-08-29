@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { CalendarDays, Star } from "lucide-react";
 import { getActiveMenu } from "@/lib/active-menu";
 import { dateDaysAgo, dateKey } from "@/lib/dates";
@@ -8,7 +7,7 @@ import {
   getMostSelectedRecipes,
 } from "@/lib/meals";
 import { getBestRatedRecipes } from "@/lib/recipes";
-import { getUserHousehold } from "@/lib/session";
+import { requireUserWithHousehold } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -145,10 +144,7 @@ function StatisticsSection({
 }
 
 export default async function Home() {
-  const household = await getUserHousehold();
-  if (!household) {
-    redirect("/login");
-  }
+  const { household } = await requireUserWithHousehold();
 
   const activeMenu = await getActiveMenu(household.id);
   const today = dateKey(new Date());

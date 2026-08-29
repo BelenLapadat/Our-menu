@@ -1,10 +1,5 @@
 import { cookies } from "next/headers";
-import {
-  createMenu,
-  getMenu,
-  getMenusForHousehold,
-  type Menu,
-} from "./menus";
+import { createMenu, getMenusForHousehold, type Menu } from "./menus";
 
 export const ACTIVE_MENU_COOKIE = "active-menu-id";
 
@@ -22,11 +17,6 @@ export async function getActiveMenu(householdId: string): Promise<Menu> {
     const menu = menus.find((item) => item.id === cookieMenuId);
     if (menu) {
       return menu;
-    }
-
-    const menuById = await getMenu(cookieMenuId, householdId);
-    if (menuById) {
-      return menuById;
     }
   }
 

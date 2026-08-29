@@ -5,16 +5,8 @@ import { redirect } from "next/navigation";
 import { ACTIVE_MENU_COOKIE } from "@/lib/active-menu";
 import { createMenu, deleteMenu, getMenu } from "@/lib/menus";
 import { revalidateAfterMenuChange } from "@/lib/revalidate";
+import { sanitizeInternalPath } from "@/lib/safe-path";
 import { requireUserWithHousehold } from "@/lib/session";
-
-function sanitizeReturnPath(value: FormDataEntryValue | null) {
-  const path = String(value ?? "").trim();
-  if (path.startsWith("/") && !path.startsWith("//")) {
-    return path;
-  }
-
-  return "/";
-}
 
 function appendQueryParam(path: string, key: string, value: string) {
   const [pathname, search = ""] = path.split("?");
@@ -36,7 +28,9 @@ async function setActiveMenuCookie(menuId: string) {
 export async function switchMenu(formData: FormData) {
   const { household } = await requireUserWithHousehold();
   const menuId = String(formData.get("menuId") ?? "").trim();
-  const returnTo = sanitizeReturnPath(formData.get("returnTo"));
+  const returnTo = sanitizeInternalPath(
+    String(formData.get("returnTo") ?? "").trim(),
+  );
 
   if (!menuId) {
     throw new Error("El menu no es valido.");
@@ -55,7 +49,9 @@ export async function switchMenu(formData: FormData) {
 export async function addMenu(formData: FormData) {
   const { household } = await requireUserWithHousehold();
   const name = String(formData.get("name") ?? "").trim();
-  const returnTo = sanitizeReturnPath(formData.get("returnTo"));
+  const returnTo = sanitizeInternalPath(
+    String(formData.get("returnTo") ?? "").trim(),
+  );
 
   if (!name) {
     throw new Error("El nombre del menu es obligatorio.");
@@ -70,7 +66,9 @@ export async function addMenu(formData: FormData) {
 export async function removeMenu(formData: FormData) {
   const { household } = await requireUserWithHousehold();
   const menuId = String(formData.get("menuId") ?? "").trim();
-  const returnTo = sanitizeReturnPath(formData.get("returnTo"));
+  const returnTo = sanitizeInternalPath(
+    String(formData.get("returnTo") ?? "").trim(),
+  );
 
   if (!menuId) {
     throw new Error("El menu no es valido.");

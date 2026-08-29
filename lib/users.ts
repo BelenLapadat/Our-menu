@@ -50,13 +50,3 @@ export async function findOrCreateUser(input: {
 
   return mapUser(row as Record<string, unknown>);
 }
-
-export async function getUserById(id: string) {
-  const result = await db.execute({
-    sql: "SELECT id, email, name, image FROM users WHERE id = ?",
-    args: [id],
-  });
-
-  const row = result.rows[0];
-  return row ? mapUser(row as Record<string, unknown>) : undefined;
-}

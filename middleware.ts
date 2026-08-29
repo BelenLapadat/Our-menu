@@ -1,13 +1,6 @@
 import { getToken } from "next-auth/jwt";
 import { NextResponse, type NextRequest } from "next/server";
-
-function sanitizeCallbackPath(value: string | null) {
-  if (value?.startsWith("/") && !value.startsWith("//")) {
-    return value;
-  }
-
-  return "/";
-}
+import { sanitizeInternalPath } from "@/lib/safe-path";
 
 export async function middleware(request: NextRequest) {
   const { nextUrl } = request;
@@ -30,7 +23,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (isLoggedIn && isLoginPage) {
-    const redirectTo = sanitizeCallbackPath(
+    const redirectTo = sanitizeInternalPath(
       nextUrl.searchParams.get("callbackUrl"),
     );
     return NextResponse.redirect(new URL(redirectTo, nextUrl));

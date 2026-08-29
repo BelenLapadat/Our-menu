@@ -1,3 +1,5 @@
+import { isDateKey } from "./dates";
+
 export type ValidatedMealInput = {
   id?: string;
   date: string;
@@ -24,7 +26,7 @@ export function validateMealInput(
     throw new Error("Los datos de la comida no son validos.");
   }
 
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Array.isArray(recipeIds)) {
+  if (!isDateKey(date) || !Array.isArray(recipeIds)) {
     throw new Error("Los datos de la comida no son validos.");
   }
 

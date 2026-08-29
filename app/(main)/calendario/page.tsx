@@ -1,15 +1,14 @@
-import { redirect } from "next/navigation";
+import DeletionNotice from "@/app/components/deletion-notice";
 import { getActiveMenu } from "@/lib/active-menu";
-import { getDatesWithMealNotes, getMealsBetween } from "@/lib/meals";
-import { getRecipes } from "@/lib/recipes";
-import { getUserHousehold } from "@/lib/session";
 import {
   dateKey,
   getWeekDays,
   isDateKey,
   startOfWeek,
 } from "@/lib/dates";
-import DeletionNotice from "@/app/components/deletion-notice";
+import { getDatesWithMealNotes, getMealsBetween } from "@/lib/meals";
+import { getRecipes } from "@/lib/recipes";
+import { requireUserWithHousehold } from "@/lib/session";
 import CalendarView from "./calendar-view";
 
 export const dynamic = "force-dynamic";
@@ -39,10 +38,7 @@ export default async function CalendarPage({
       ? requestedDate
       : undefined;
   const selectedDay = validRequestedDate ?? dateKey(anchorDate);
-  const household = await getUserHousehold();
-  if (!household) {
-    redirect("/login");
-  }
+  const { household } = await requireUserWithHousehold();
 
   const activeMenu = await getActiveMenu(household.id);
   const [recipes, meals, notedDates] = await Promise.all([

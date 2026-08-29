@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { acceptInvite } from "@/app/invites/actions";
-import { getInviteHouseholdId, getInvitePreview } from "@/lib/invites";
+import { getInvitePreview } from "@/lib/invites";
 import { userHasHouseholdAccess } from "@/lib/households";
 import { requireUser } from "@/lib/session";
 
@@ -13,7 +13,7 @@ export default async function InvitePage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  await requireUser();
+  const user = await requireUser();
 
   const preview = await getInvitePreview(token);
   if (!preview) {
@@ -64,13 +64,7 @@ export default async function InvitePage({
     );
   }
 
-  const user = await requireUser();
-  const inviteHouseholdId = await getInviteHouseholdId(token);
-
-  if (
-    inviteHouseholdId &&
-    (await userHasHouseholdAccess(user.id, inviteHouseholdId))
-  ) {
+  if (await userHasHouseholdAccess(user.id, preview.householdId)) {
     redirect("/");
   }
 

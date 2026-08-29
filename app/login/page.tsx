@@ -1,4 +1,5 @@
 import { signIn } from "@/auth";
+import { sanitizeInternalPath } from "@/lib/safe-path";
 
 const errorMessages: Record<string, string> = {
   OAuthSignin: "No se pudo iniciar sesion con Google.",
@@ -9,21 +10,13 @@ const errorMessages: Record<string, string> = {
   Default: "No se pudo iniciar sesion. Intentalo de nuevo.",
 };
 
-function sanitizeCallbackUrl(value: string | undefined) {
-  if (value?.startsWith("/") && !value.startsWith("//")) {
-    return value;
-  }
-
-  return "/";
-}
-
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams: Promise<{ callbackUrl?: string; error?: string }>;
 }) {
   const { callbackUrl, error } = await searchParams;
-  const redirectTo = sanitizeCallbackUrl(callbackUrl);
+  const redirectTo = sanitizeInternalPath(callbackUrl);
   const errorMessage = error ? (errorMessages[error] ?? errorMessages.Default) : null;
 
   return (
