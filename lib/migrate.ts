@@ -262,3 +262,12 @@ export async function migrateInvites() {
     )
   `);
 }
+
+export async function runMigrations() {
+  await migrateToMultiMenu();
+  await migrateSharedRecipes();
+  await migrateUsers();
+  await migrateHouseholds();
+  await migrateInvites();
+  await migrateMealUpdatedAt();
+}
